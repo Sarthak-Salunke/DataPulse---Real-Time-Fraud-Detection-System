@@ -1,0 +1,26 @@
+# Web Framework
+flask==3.0.0
+flask-cors==4.0.0
+flask-socketio==5.3.5
+
+# Database Drivers
+psycopg2-binary==2.9.9
+cassandra-driver==3.29.0
+
+# Data Processing
+pandas==2.1.4
+numpy==1.26.2
+
+# Messaging
+kafka-python==2.0.2
+
+# Async Support
+python-socketio==5.10.0
+eventlet==0.33.3
+
+# Spark (if needed in backend)
+pyspark==3.5.0
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0

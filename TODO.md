@@ -1,0 +1,16 @@
+- [x] Update src/components/Common/Header.tsx: Add Theme import, fix constants path
+- [x] Update src/components/Common/Sidebar.tsx: Add Theme import
+- [x] Update src/components/Dashboard/MetricsCard.tsx: Add Theme import, fix types and constants paths
+- [x] Update src/components/Charts/TransactionChart.tsx: Add Theme import, fix App path
+- [x] Update src/components/InquiriesOverview.tsx: Add Theme import, fix any local paths
+- [x] Update src/components/LandingPage.tsx: Add Theme import, fix any local paths
+- [x] Update src/components/ProblemSection.tsx: Add Theme import, fix any local paths
+- [x] Update src/components/SolutionSection.tsx: Add Theme import, fix any local paths
+- [x] Update src/components/VerifiableComputeSection.tsx: Add Theme import, fix any local paths
+- [x] Update src/components/Charts/CreditDebitChart.tsx: Add Theme import, fix any local paths
+- [x] Update src/components/Charts/PopularCountriesMap.tsx: Add Theme import, fix any local paths
+- [x] Update src/components/Charts/SystemAdvicesChart.tsx: Add Theme import, fix any local paths
+- [x] Update src/components/Dashboard/Dashboard.tsx: Add Theme import, fix any local paths
+- [x] Update src/components/Dashboard/RealTimeFeed.tsx: Add Theme import, fix any local paths
+- [x] Update src/components/Modals/ (if any files): No files found
+- [x] Update src/components/Pipeline/ArchitectureDiagram.tsx: Add Theme import, fix any local paths
