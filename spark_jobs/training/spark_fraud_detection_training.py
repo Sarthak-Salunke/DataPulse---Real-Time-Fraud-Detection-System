@@ -19,7 +19,7 @@ from pyspark.ml import Pipeline, PipelineModel
 from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
 from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.clustering import KMeans
-from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator, BinaryClassificationEvaluator
 from dotenv import load_dotenv
 
 # Add parent directory to path
@@ -211,20 +211,38 @@ def train_random_forest_model(df, spark):
     
     accuracy = evaluator_accuracy.evaluate(predictions)
     f1_score = evaluator_f1.evaluate(predictions)
-    
+
+    # ROC-AUC
+    evaluator_roc = BinaryClassificationEvaluator(
+        labelCol="label",
+        rawPredictionCol="rawPrediction",
+        metricName="areaUnderROC"
+    )
+    roc_auc = evaluator_roc.evaluate(predictions)
+
+    # PR-AUC
+    evaluator_pr = BinaryClassificationEvaluator(
+        labelCol="label",
+        rawPredictionCol="rawPrediction",
+        metricName="areaUnderPR"
+    )
+    pr_auc = evaluator_pr.evaluate(predictions)
+
     # Calculate fraud detection metrics
     fraud_predictions = predictions.filter(col("label") == 1.0)
     fraud_count = fraud_predictions.count()
-    
+
     if fraud_count > 0:
         correct_fraud = fraud_predictions.filter(col("prediction") == col("label")).count()
         fraud_recall = correct_fraud / fraud_count
     else:
         fraud_recall = 0.0
-    
+
     print_section("MODEL EVALUATION RESULTS")
     print(f"[RESULT] Overall Accuracy: {accuracy*100:.2f}%")
     print(f"[RESULT] F1-Score: {f1_score:.4f}")
+    print(f"[RESULT] ROC-AUC: {roc_auc:.4f}")
+    print(f"[RESULT] PR-AUC: {pr_auc:.4f}")
     print(f"[RESULT] Fraud Detection Recall: {fraud_recall*100:.2f}%")
     print(f"[INFO] Total test samples: {test_count}")
     print(f"[INFO] Correct predictions: {predictions.filter(col('prediction') == col('label')).count()}")

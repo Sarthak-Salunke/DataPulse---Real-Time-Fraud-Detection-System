@@ -1,5 +1,4 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useTheme } from '../../App';
 
 const data = [
   { name: '$0-50', Normal: 1200, Fraud: 5 },
@@ -24,7 +23,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const AmountDistributionChart = () => {
-    const { theme } = useTheme();
     const axisColor = 'var(--text-secondary-dark)';
     const gridColor = 'var(--border-color-dark)';
 

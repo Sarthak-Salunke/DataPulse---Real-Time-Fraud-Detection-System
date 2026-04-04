@@ -1,96 +1,135 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { Theme } from '../../types';
 import type { KPI } from '../../types';
-import { ICONS } from '../../utils/constants';
 
-interface KPICardProps extends KPI {}
+interface KPICardProps extends KPI {
+  accentColor?: string;
+}
 
-const Panel: React.FC<React.PropsWithChildren<{ className?: string }>> = ({ children, className }) => (
-    <div className={`bg-[var(--panel-bg-dark)] backdrop-blur-md border border-[var(--panel-border-dark)] rounded-xl p-4 shadow-lg transition-all duration-300 glow-border h-full ${className}`}>
-        {children}
-    </div>
-);
+const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
 
-const easeOutExpo = (t: number): number => (t === 1 ? 1 : 1 - Math.pow(2, -10 * t));
+const AnimatedCounter: React.FC<{ value: string }> = ({ value }) => {
+  const [display, setDisplay] = useState('0');
+  const frameRef = useRef<number>(0);
+  const startRef = useRef<number>(0);
 
-const AnimatedCounter = ({ value }: { value: string }) => {
-    const [displayValue, setDisplayValue] = useState(0);
-    // Fix: Provide an initial value to useRef to fix "Expected 1 arguments, but got 0" error.
-    const frameRef = useRef(0);
-    const startTimeRef = useRef(0);
-    const startValueRef = useRef(0);
+  const raw = parseFloat(value.replace(/[,%]/g, ''));
+  const suffix = value.match(/%/) ? '%' : '';
+  const hasDecimal = value.includes('.');
+  const decimals = hasDecimal ? value.split('.')[1].replace('%', '').length : 0;
 
-    const endValue = parseFloat(value.replace(/[,%]/g, ''));
-    const suffix = value.match(/[%]/g)?.join('') || '';
-    const hasDecimal = value.includes('.');
-    const decimalPlaces = hasDecimal ? value.split('.')[1].replace('%','').length : 0;
-    
-    useEffect(() => {
-        const initialValue = parseFloat(value.replace(/[,%]/g, ''));
-        setDisplayValue(initialValue);
-    }, []);
+  useEffect(() => {
+    startRef.current = performance.now();
+    const duration = 1800;
 
-    useEffect(() => {
-        startValueRef.current = displayValue;
-        startTimeRef.current = performance.now();
-        const duration = 1500;
-
-        const animate = (timestamp: number) => {
-            const progress = timestamp - startTimeRef.current;
-            const percentage = Math.min(progress / duration, 1);
-            const easedPercentage = easeOutExpo(percentage);
-
-            const currentCount = startValueRef.current + (endValue - startValueRef.current) * easedPercentage;
-            setDisplayValue(currentCount);
-
-            if (progress < duration) {
-                frameRef.current = requestAnimationFrame(animate);
-            } else {
-                setDisplayValue(endValue);
-            }
-        };
-
-        frameRef.current = requestAnimationFrame(animate);
-
-        return () => {
-            if (frameRef.current) {
-                cancelAnimationFrame(frameRef.current);
-            }
-        };
-    }, [endValue]);
-
-    const formatValue = (num: number) => {
-         if (isNaN(num)) return '...';
-         if (hasDecimal) {
-            return num.toFixed(decimalPlaces);
-         }
-         return Math.floor(num).toLocaleString();
+    const step = (now: number) => {
+      const t = Math.min((now - startRef.current) / duration, 1);
+      const val = easeOutCubic(t) * raw;
+      setDisplay(
+        hasDecimal ? val.toFixed(decimals) : Math.floor(val).toLocaleString()
+      );
+      if (t < 1) frameRef.current = requestAnimationFrame(step);
     };
 
-    return <>{formatValue(displayValue)}{suffix}</>;
+    frameRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frameRef.current);
+  }, [raw, hasDecimal, decimals]);
+
+  return <>{display}{suffix}</>;
 };
 
+const KPICard: React.FC<KPICardProps> = ({
+  title,
+  value,
+  details,
+  change,
+  changeType,
+  accentColor,
+}) => {
+  const accent = accentColor ?? 'var(--cyan)';
+  const isFraud = title.toLowerCase().includes('fraud');
+  const valueColor = isFraud ? 'var(--fraud)' : changeType === 'increase' ? 'var(--text-bright)' : 'var(--text-bright)';
+  const trendColor = changeType === 'increase' ? 'var(--safe)' : 'var(--fraud)';
+  const trendPrefix = changeType === 'increase' ? '↑' : '↓';
 
-const KPICard: React.FC<KPICardProps> = ({ title, value, details, change, changeType }) => {
-    const isIncrease = changeType === 'increase';
-    const colorClass = isIncrease ? 'text-green-400' : 'text-red-400';
-    const Icon = isIncrease ? ICONS.trendingUp : ICONS.trendingDown;
+  return (
+    <div
+      className="card-hover"
+      style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--r-lg)',
+        padding: '20px 24px',
+        position: 'relative',
+        overflow: 'hidden',
+        height: '100%',
+      }}
+    >
+      {/* Top accent gradient line */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '2px',
+          background: `linear-gradient(90deg, ${accent}, transparent)`,
+          opacity: 0.6,
+        }}
+      />
 
-    return (
-        <Panel>
-            <p className="text-sm text-[var(--text-secondary-dark)] font-semibold uppercase truncate">{title}</p>
-            <div className="mt-2 flex items-baseline justify-between">
-                <p className="text-3xl font-extrabold text-inherit">
-                    <AnimatedCounter value={value} />
-                </p>
-                 <div className={`flex items-center text-sm font-semibold ${colorClass}`}>
-                    <Icon className="h-4 w-4 mr-1" />
-                    <span>{change}</span>
-                </div>
-            </div>
-            <p className="text-xs text-[var(--text-secondary-dark)] mt-1 truncate">{details}</p>
-        </Panel>
-    );
+      <div
+        style={{
+          fontFamily: 'var(--font-label)',
+          fontSize: '11px',
+          fontWeight: 600,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          color: 'var(--text-secondary)',
+          marginBottom: '10px',
+        }}
+      >
+        {title}
+      </div>
+
+      <div
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '34px',
+          fontWeight: 500,
+          color: valueColor,
+          lineHeight: 1,
+          letterSpacing: '-0.02em',
+          marginBottom: '8px',
+        }}
+      >
+        <AnimatedCounter value={value} />
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px',
+            color: 'var(--text-muted)',
+          }}
+        >
+          {details}
+        </span>
+        <span
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '11px',
+            color: trendColor,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '3px',
+          }}
+        >
+          {trendPrefix} {change}
+        </span>
+      </div>
+    </div>
+  );
 };
 
 export default KPICard;

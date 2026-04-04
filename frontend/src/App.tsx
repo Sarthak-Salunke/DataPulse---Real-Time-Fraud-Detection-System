@@ -1,34 +1,41 @@
-import { useState, useEffect, createContext, useContext, PropsWithChildren, useRef } from 'react';
+import { useState, useEffect, createContext, useContext, type PropsWithChildren } from 'react';
+import { LandingHeader, Hero, StatsTicker, CtaSection, Footer } from './components/LandingPage';
+import ProblemSection from './components/ProblemSection';
+import HowItWorks from './components/SolutionSection';
+import FeaturesGrid from './components/VerifiableComputeSection';
+import ArchitectureDiagram from './components/Pipeline/ArchitectureDiagram';
 import Header from './components/Common/Header';
 import Dashboard from './components/Dashboard/Dashboard';
-import { LandingHeader, Hero, Footer } from './components/LandingPage';
-import ArchitectureDiagram from './components/Pipeline/ArchitectureDiagram';
-import ProblemSection from './components/ProblemSection';
-import SolutionSection from './components/SolutionSection';
-import VerifiableComputeSection from './components/VerifiableComputeSection';
 
-// Theme Management
-type Theme = 'light' | 'dark';
-const ThemeContext = createContext<{ theme: Theme; toggleTheme: () => void } | undefined>(undefined);
+// ── Theme context ──────────────────────────────────────────────────────────
+type Theme = 'dark' | 'light';
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) throw new Error('useTheme must be used within a ThemeProvider');
-  return context;
+interface ThemeCtx {
+  theme: Theme;
+  toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeCtx | undefined>(undefined);
+
+export const useTheme = (): ThemeCtx => {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error('useTheme must be used inside ThemeProvider');
+  return ctx;
 };
 
 const ThemeProvider = ({ children }: PropsWithChildren) => {
   const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove(theme === 'light' ? 'dark' : 'light');
-    root.classList.add(theme);
+    const root = document.documentElement;
+    if (theme === 'light') {
+      root.classList.add('light');
+    } else {
+      root.classList.remove('light');
+    }
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
+  const toggleTheme = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'));
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
@@ -37,76 +44,54 @@ const ThemeProvider = ({ children }: PropsWithChildren) => {
   );
 };
 
-// AnimateOnScroll Wrapper
-const AnimateOnScroll = ({ 
-  children, 
-  className, 
-  threshold = 0.1 
-}: { 
-  children: React.ReactNode; 
-  className?: string; 
-  threshold?: number;
-}) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold }
-    );
-
-    const currentRef = ref.current;
-    if (currentRef) {
-      observer.observe(currentRef);
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-    };
-  }, [threshold]);
-
-  return (
-    <div ref={ref} className={`${className || ''} ${isVisible ? 'is-visible' : ''}`}>
-      {children}
-    </div>
-  );
-};
-
-// Main App Component
+// ── App ────────────────────────────────────────────────────────────────────
 function App() {
   return (
     <ThemeProvider>
-      <div className="bg-[var(--bg-color-dark)] text-[var(--text-primary-dark)] font-sans min-h-screen">
-        <LandingHeader />
-        <main>
-          <Hero />
-          
-          <AnimateOnScroll>
-            <section id="dashboard" className="py-16 sm:py-24">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="will-animate">
-                  <Header />
-                </div>
-                <div className="mt-8 will-animate delay-200">
-                  <Dashboard />
-                </div>
-              </div>
-            </section>
-          </AnimateOnScroll>
+      <div style={{ background: 'var(--bg-void)', color: 'var(--text-primary)', minHeight: '100vh' }}>
 
-          <AnimateOnScroll><ProblemSection /></AnimateOnScroll>
-          <AnimateOnScroll><SolutionSection /></AnimateOnScroll>
-          <AnimateOnScroll><VerifiableComputeSection /></AnimateOnScroll>
-          <AnimateOnScroll><ArchitectureDiagram /></AnimateOnScroll>
+        {/* ── Landing nav ── */}
+        <LandingHeader />
+
+        <main>
+          {/* ── Hero ── */}
+          <Hero />
+
+          {/* ── Stats ticker ── */}
+          <StatsTicker />
+
+          {/* ── The Problem ── */}
+          <ProblemSection />
+
+          {/* ── How It Works (pinned scroll steps) ── */}
+          <HowItWorks />
+
+          {/* ── Features grid ── */}
+          <FeaturesGrid />
+
+          {/* ── Architecture pipeline ── */}
+          <ArchitectureDiagram />
+
+          {/* ── CTA ── */}
+          <CtaSection />
+
+          {/* ── Live Dashboard ── */}
+          <section
+            id="dashboard"
+            style={{
+              padding: '80px 32px 100px',
+              background: 'var(--bg-void)',
+              borderTop: '1px solid var(--border)',
+            }}
+          >
+            <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+              <Header />
+              <Dashboard />
+            </div>
+          </section>
         </main>
+
+        {/* ── Footer ── */}
         <Footer />
       </div>
     </ThemeProvider>

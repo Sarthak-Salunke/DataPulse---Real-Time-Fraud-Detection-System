@@ -1,3 +1,23 @@
+# Logistic Regression Training Guide for Fraud Detection
+
+## 📊 Dataset Summary
+- **Total Transactions**: 11,871
+- **Fraud Cases**: 501 (4.22%)
+- **Normal Cases**: 11,370 (95.78%)
+- **Customers**: 100
+- **Files**: `customer.csv`, `transactions.csv`
+
+---
+
+## 🎯 Step-by-Step Training Process
+
+### **STEP 1: Environment Setup and Data Loading**
+
+First, create a new Python file and import necessary libraries:
+
+```python
+# fraud_detection_lr.py
+
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
@@ -13,25 +33,33 @@ import seaborn as sns
 from datetime import datetime
 import warnings
 warnings.filterwarnings('ignore')
-import pickle
 
 # Set random seed for reproducibility
 np.random.seed(42)
 
+print("=" * 80)
+print("FRAUD DETECTION - LOGISTIC REGRESSION MODEL")
+print("=" * 80)
+```
+
+**Load the datasets:**
+
+```python
 # Load data
-customer_df = pd.read_csv('../../data/customer.csv')
-transactions_df = pd.read_csv('../../data/transactions.csv')
+customer_df = pd.read_csv('customer.csv')
+transactions_df = pd.read_csv('transactions.csv')
 
 print(f"\n📁 Data Loaded:")
 print(f"   Customers: {len(customer_df)} records")
 print(f"   Transactions: {len(transactions_df)} records")
 print(f"   Fraud Rate: {transactions_df['is_fraud'].mean()*100:.2f}%")
+```
 
-print("=" * 80)
-print("FRAUD DETECTION - LOGISTIC REGRESSION MODEL")
-print("=" * 80)
+---
 
-# STEP 2: Exploratory Data Analysis (Quick Check)
+### **STEP 2: Exploratory Data Analysis (Quick Check)**
+
+```python
 # Check for missing values
 print("\n🔍 Missing Values Check:")
 print(f"   Customer data: {customer_df.isnull().sum().sum()} missing values")
@@ -45,14 +73,20 @@ print(fraud_stats)
 # Check data types
 print("\n📋 Transaction Data Types:")
 print(transactions_df.dtypes)
+```
 
-# STEP 3: Feature Engineering
-# This is the most critical step for model performance!
+---
+
+### **STEP 3: Feature Engineering**
+
+This is the **most critical step** for model performance!
+
+```python
 def engineer_features(trans_df, cust_df):
     """
     Comprehensive feature engineering for fraud detection
     """
-    print("\n🚀 Engineering Features...")
+    print("\n🔧 Engineering Features...")
     
     # Merge transaction and customer data
     df = trans_df.merge(cust_df, on='cc_num', how='left', suffixes=('_trans', '_cust'))
@@ -193,20 +227,25 @@ def engineer_features(trans_df, cust_df):
     category_fraud_rate.columns = ['category', 'category_fraud_rate']
     df = df.merge(category_fraud_rate, on='category', how='left')
     
-    print(f"\n    ✓ Feature Engineering Complete!")
+    print(f"\n   ✅ Feature Engineering Complete!")
     print(f"   Total Features Created: {len(df.columns)}")
     
     return df
 
 # Apply feature engineering
 df_engineered = engineer_features(transactions_df, customer_df)
+```
 
-# STEP 4: Feature Selection and Preparation
+---
+
+### **STEP 4: Feature Selection and Preparation**
+
+```python
 def prepare_features(df):
     """
     Select and prepare features for modeling
     """
-    print("\n🔧 Preparing Features for Modeling...")
+    print("\n📋 Preparing Features for Modeling...")
     
     # Define feature columns to use
     numerical_features = [
@@ -241,7 +280,7 @@ def prepare_features(df):
     # Handle any remaining missing values
     X = X.fillna(X.median())
     
-    print(f"\n    Final Feature Matrix Shape: {X.shape}")
+    print(f"\n   ✅ Final Feature Matrix Shape: {X.shape}")
     print(f"   Class Distribution:")
     print(f"      Normal: {sum(y==0)} ({sum(y==0)/len(y)*100:.2f}%)")
     print(f"      Fraud: {sum(y==1)} ({sum(y==1)/len(y)*100:.2f}%)")
@@ -249,8 +288,13 @@ def prepare_features(df):
     return X, y, X.columns.tolist()
 
 X, y, feature_names = prepare_features(df_engineered)
+```
 
-# STEP 5: Train-Test Split:
+---
+
+### **STEP 5: Train-Test Split**
+
+```python
 # Split data - use stratified split to maintain fraud ratio
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, 
@@ -264,9 +308,15 @@ print(f"   Training set: {len(X_train)} samples")
 print(f"   Test set: {len(X_test)} samples")
 print(f"   Training fraud rate: {y_train.mean()*100:.2f}%")
 print(f"   Test fraud rate: {y_test.mean()*100:.2f}%")
+```
 
-# STEP 6: Feature Scaling
-# ⚠️ CRITICAL for Logistic Regression!
+---
+
+### **STEP 6: Feature Scaling**
+
+⚠️ **CRITICAL for Logistic Regression!**
+
+```python
 # Initialize scaler
 scaler = StandardScaler()
 
@@ -277,8 +327,17 @@ X_test_scaled = scaler.transform(X_test)
 print("\n⚙️ Feature Scaling Applied (StandardScaler)")
 print(f"   Training set mean: {X_train_scaled.mean():.6f}")
 print(f"   Training set std: {X_train_scaled.std():.6f}")
+```
 
-# STEP 7: Handle Class Imbalance - SMOTE + Undersampling
+---
+
+### **STEP 7: Handle Class Imbalance - SMOTE + Undersampling**
+
+```python
+from imblearn.over_sampling import SMOTE
+from imblearn.under_sampling import RandomUnderSampler
+from imblearn.pipeline import Pipeline as ImbPipeline
+
 print("\n⚖️ Handling Class Imbalance...")
 
 # Create sampling strategy
@@ -300,8 +359,13 @@ print(f"   After resampling:")
 print(f"      Normal: {sum(y_train_resampled==0)}, Fraud: {sum(y_train_resampled==1)}")
 print(f"   New training set size: {len(X_train_resampled)} samples")
 print(f"   New fraud rate: {y_train_resampled.mean()*100:.2f}%")
+```
 
-# STEP 8: Train Baseline Logistic Regression
+---
+
+### **STEP 8: Train Baseline Logistic Regression**
+
+```python
 print("\n" + "="*80)
 print("TRAINING BASELINE LOGISTIC REGRESSION MODEL")
 print("="*80)
@@ -322,14 +386,19 @@ y_test_pred = lr_baseline.predict(X_test_scaled)
 y_test_proba = lr_baseline.predict_proba(X_test_scaled)[:, 1]
 
 print("\n✅ Baseline Model Trained!")
+```
 
-# STEP 9: Evaluate Baseline Model
+---
+
+### **STEP 9: Evaluate Baseline Model**
+
+```python
 def evaluate_model(y_true, y_pred, y_proba, dataset_name="Test"):
     """
     Comprehensive model evaluation
     """
     print(f"\n{'='*80}")
-    print(f"EVALUATING MODEL ON {dataset_name.upper()} SET")
+    print(f"{dataset_name.upper()} SET EVALUATION")
     print(f"{'='*80}")
     
     # Confusion Matrix
@@ -383,8 +452,13 @@ def evaluate_model(y_true, y_pred, y_proba, dataset_name="Test"):
 
 # Evaluate on test set
 baseline_metrics = evaluate_model(y_test, y_test_pred, y_test_proba, "Test")
+```
 
-# STEP 10: Hyperparameter Tuning with GridSearchCV
+---
+
+### **STEP 10: Hyperparameter Tuning with GridSearchCV**
+
+```python
 print("\n" + "="*80)
 print("HYPERPARAMETER TUNING WITH GRID SEARCH")
 print("="*80)
@@ -398,7 +472,7 @@ param_grid = {
     'max_iter': [1000]
 }
 
-print(f"\n🧪 Testing {len(param_grid['C']) * len(param_grid['penalty']) * len(param_grid['solver']) * len(param_grid['class_weight'])} combinations...")
+print(f"\n🔍 Testing {len(param_grid['C']) * len(param_grid['penalty']) * len(param_grid['solver']) * len(param_grid['class_weight'])} combinations...")
 
 # Use Stratified K-Fold for cross-validation
 cv_strategy = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
@@ -414,20 +488,25 @@ grid_search = GridSearchCV(
 )
 
 # Fit grid search
-print("\n⏳ Running Grid Search (this may take a few minutes)...")
+print("\n⚙️ Running Grid Search (this may take a few minutes)...")
 grid_search.fit(X_train_resampled, y_train_resampled)
 
-print(f"\n🎉 Grid Search Complete!")
+print(f"\n✅ Grid Search Complete!")
 print(f"\n🏆 Best Parameters:")
 for param, value in grid_search.best_params_.items():
     print(f"   {param}: {value}")
 
-print(f"\nBest Cross-Validation ROC-AUC Score: {grid_search.best_score_:.4f}")
+print(f"\n📊 Best Cross-Validation ROC-AUC Score: {grid_search.best_score_:.4f}")
 
 # Get best model
 best_lr_model = grid_search.best_estimator_
+```
 
-# STEP 11: Evaluate Optimized Model
+---
+
+### **STEP 11: Evaluate Optimized Model**
+
+```python
 # Predictions with optimized model
 y_train_pred_opt = best_lr_model.predict(X_train_scaled)
 y_test_pred_opt = best_lr_model.predict(X_test_scaled)
@@ -441,14 +520,17 @@ print("="*80)
 optimized_metrics = evaluate_model(y_test, y_test_pred_opt, y_test_proba_opt, "Test")
 
 # Compare with baseline
-print(f"\n🚀 IMPROVEMENT OVER BASELINE:")
-print(f"   ROC-AUC: {baseline_metrics['roc_auc']:.4f} → {optimized_metrics['roc_auc']:.4f} ({(optimized_metrics['roc_auc']-baseline_metrics['roc_auc']):+.4f})")
-print(f"   PR-AUC:  {baseline_metrics['pr_auc']:.4f} → {optimized_metrics['pr_auc']:.4f} ({(optimized_metrics['pr_auc']-baseline_metrics['pr_auc']):+.4f})")
-print(f"   F1-Score: {baseline_metrics['f1']:.4f} → {optimized_metrics['f1']:.4f} ({(optimized_metrics['f1']-baseline_metrics['f1']):+.4f})")
-print(f"   Recall:   {baseline_metrics['recall']:.4f} → {optimized_metrics['recall']:.4f} ({(optimized_metrics['recall']-baseline_metrics['recall']):+.4f})")
-print(f"   Precision:{baseline_metrics['precision']:.4f} → {optimized_metrics['precision']:.4f} ({(optimized_metrics['precision']-baseline_metrics['precision']):+.4f})")
+print(f"\n📊 IMPROVEMENT OVER BASELINE:")
+print(f"   ROC-AUC: {baseline_metrics['roc_auc']:.4f} → {optimized_metrics['roc_auc']:.4f} ({(optimized_metrics['roc_auc']-baseline_metrics['roc_auc'])*100:+.2f}%)")
+print(f"   PR-AUC:  {baseline_metrics['pr_auc']:.4f} → {optimized_metrics['pr_auc']:.4f} ({(optimized_metrics['pr_auc']-baseline_metrics['pr_auc'])*100:+.2f}%)")
+print(f"   F1-Score: {baseline_metrics['f1']:.4f} → {optimized_metrics['f1']:.4f} ({(optimized_metrics['f1']-baseline_metrics['f1'])*100:+.2f}%)")
+```
 
-# STEP 12: Feature Importance Analysis
+---
+
+### **STEP 12: Feature Importance Analysis**
+
+```python
 print("\n" + "="*80)
 print("FEATURE IMPORTANCE ANALYSIS")
 print("="*80)
@@ -463,14 +545,19 @@ feature_importance = pd.DataFrame({
     'abs_coefficient': np.abs(coefficients)
 }).sort_values('abs_coefficient', ascending=False)
 
-print("\n📊 Top 15 Most Important Features:")
+print("\n🔝 Top 15 Most Important Features:")
 print(feature_importance.head(15).to_string(index=False))
 
 # Save feature importance
 feature_importance.to_csv('feature_importance_lr.csv', index=False)
-print("\n💾 Feature importance saved to 'feature_importance_lr.csv'")
+print("\n✅ Feature importance saved to 'feature_importance_lr.csv'")
+```
 
-# STEP 13: ROC and Precision-Recall Curves
+---
+
+### **STEP 13: ROC and Precision-Recall Curves**
+
+```python
 def plot_performance_curves(y_true, y_proba, save_path='lr_performance_curves.png'):
     """
     Plot ROC and Precision-Recall curves
@@ -510,13 +597,18 @@ def plot_performance_curves(y_true, y_proba, save_path='lr_performance_curves.pn
     
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    print(f"\n📈 Performance curves saved to '{save_path}'")
+    print(f"\n📊 Performance curves saved to '{save_path}'")
     plt.close()
 
 # Generate plots
 plot_performance_curves(y_test, y_test_proba_opt)
+```
 
-# STEP 14: Threshold Optimization
+---
+
+### **STEP 14: Threshold Optimization**
+
+```python
 def find_optimal_threshold(y_true, y_proba, metric='f1'):
     """
     Find optimal probability threshold for classification
@@ -560,8 +652,15 @@ y_test_pred_optimal = (y_test_proba_opt >= optimal_threshold).astype(int)
 
 print(f"\n📊 Performance with Optimal Threshold ({optimal_threshold:.2f}):")
 evaluate_model(y_test, y_test_pred_optimal, y_test_proba_opt, "Test (Optimized Threshold)")
+```
 
-# STEP 15: Save Model and Results
+---
+
+### **STEP 15: Save Model and Results**
+
+```python
+import pickle
+
 print("\n" + "="*80)
 print("SAVING MODEL AND RESULTS")
 print("="*80)
@@ -608,12 +707,94 @@ with open('model_results_summary.pkl', 'wb') as f:
 print("✅ Results summary saved to 'model_results_summary.pkl'")
 
 print("\n" + "="*80)
-print("TRAINING SCRIPT COMPLETE!")
+print("TRAINING COMPLETE!")
 print("="*80)
-print(f"\n📦 All artifacts have been saved successfully:")
-print(f"   1. logistic_regression_fraud_model.pkl (The trained model)")
-print(f"   2. feature_scaler.pkl (To process new data)")
-print(f"   3. feature_names.pkl (List of features for the model)")
-print(f"   4. model_results_summary.pkl (Key metrics and parameters)")
-print(f"   5. feature_importance_lr.csv (Feature influence report)")
-print(f"   6. lr_performance_curves.png (ROC and PR curves)")
+print(f"\n📦 Saved Files:")
+print(f"   1. logistic_regression_fraud_model.pkl")
+print(f"   2. feature_scaler.pkl")
+print(f"   3. feature_names.pkl")
+print(f"   4. model_results_summary.pkl")
+print(f"   5. feature_importance_lr.csv")
+print(f"   6. lr_performance_curves.png")
+```
+
+---
+
+## 🎯 Quick Reference: What to Expect
+
+### **Expected Performance Metrics:**
+- **ROC-AUC**: 0.75 - 0.85
+- **PR-AUC**: 0.40 - 0.60 (more important for imbalanced data)
+- **F1-Score**: 0.50 - 0.70
+- **Recall**: 60-80% (catching 60-80% of fraud cases)
+- **Precision**: 40-60% (40-60% of flagged transactions are actually fraud)
+
+### **Training Time:**
+- Feature Engineering: 1-2 minutes
+- Grid Search (48 combinations): 5-10 minutes
+- Total: ~10-15 minutes
+
+---
+
+## 🚀 Running the Complete Script
+
+Save all the code above into a single file `fraud_detection_lr.py` and run:
+
+```bash
+python fraud_detection_lr.py
+```
+
+---
+
+## 📊 Next Steps After Logistic Regression
+
+Once you've completed this baseline:
+
+1. **Compare with Tree-Based Models** (XGBoost, LightGBM) - typically perform better
+2. **Try Neural Networks** - if you have enough data
+3. **Build an Ensemble** - combine multiple models for best performance
+4. **Deploy** - create API endpoint for real-time fraud detection
+
+---
+
+## ⚠️ Important Notes
+
+1. **Feature Engineering is Key**: The quality of features matters more than the algorithm
+2. **Class Imbalance**: Always use SMOTE/undersampling and appropriate metrics (PR-AUC, not just accuracy)
+3. **Threshold Tuning**: Default 0.5 threshold is rarely optimal for fraud detection
+4. **Cross-Validation**: Always use stratified CV to maintain fraud ratio in each fold
+5. **Scaling**: Always scale features for Logistic Regression!
+
+---
+
+## 🐛 Common Issues and Solutions
+
+**Issue 1: "ValueError: could not convert string to float"**
+- Solution: Check for missing values, ensure all categorical variables are encoded
+
+**Issue 2: Low recall (missing most fraud cases)**
+- Solution: Lower classification threshold or increase SMOTE ratio
+
+**Issue 3: Low precision (too many false positives)**
+- Solution: Increase classification threshold or focus on better features
+
+**Issue 4: Grid search taking too long**
+- Solution: Reduce parameter grid or use RandomizedSearchCV instead
+
+---
+
+## 📝 Checklist
+
+- [ ] Install required libraries (`pip install pandas numpy scikit-learn imbalanced-learn matplotlib seaborn`)
+- [ ] Place CSV files in same directory as script
+- [ ] Run complete script
+- [ ] Check if ROC-AUC > 0.75 (good baseline)
+- [ ] Review feature importance
+- [ ] Save model files for deployment
+- [ ] Document results
+
+---
+
+**Good luck with your fraud detection model! 🚀**
+
+Let me know when you're ready to move to the next algorithm (XGBoost or Neural Networks)!

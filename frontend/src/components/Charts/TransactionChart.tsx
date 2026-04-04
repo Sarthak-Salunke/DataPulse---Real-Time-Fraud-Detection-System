@@ -1,5 +1,4 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
-import { useTheme } from '../../App';
 
 const data = Array.from({ length: 12 }, (_, i) => ({
   name: `${i * 2}:00`,
@@ -8,7 +7,6 @@ const data = Array.from({ length: 12 }, (_, i) => ({
 }));
 
 const CustomTooltip = ({ active, payload, label }: any) => {
-  const { theme } = useTheme();
   if (active && payload && payload.length) {
     return (
       <div className="p-3 rounded-lg shadow-lg backdrop-blur-sm bg-slate-800/80 border-[var(--panel-border-dark)]">
@@ -23,7 +21,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const FraudOverTimeChart = () => {
-  const { theme } = useTheme();
   const axisColor = 'var(--text-secondary-dark)';
   const gridColor = 'var(--border-color-dark)';
 

@@ -1,34 +1,110 @@
-import { useState, useEffect } from 'react';
+import { useTheme } from '../../App';
 import { ICONS } from '../../utils/constants';
 
 const Header = () => {
-  const [lastUpdated, setLastUpdated] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setLastUpdated(new Date()), 5000);
-    return () => clearInterval(timer);
-  }, []);
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-[var(--border-color-dark)]">
-        <div className="flex flex-col">
-          <h2 className="text-3xl font-bold text-inherit">Live Fraud Detection Dashboard</h2>
-          <p className="text-sm text-[var(--text-secondary-dark)] mt-1">Monitoring customer transactions in real-time</p>
+    <div
+      style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--r-lg)',
+        padding: '14px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '20px',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '20px',
+            fontWeight: 800,
+            letterSpacing: '0.04em',
+          }}
+        >
+          <span style={{ color: 'var(--text-bright)' }}>Data</span>
+          <span style={{ color: 'var(--cyan)' }}>Pulse</span>
         </div>
-        <div className="flex items-center space-x-4 mt-4 sm:mt-0">
-          <div className="flex items-center space-x-2">
-            <div className="relative flex items-center justify-center w-3 h-3">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
-            </div>
-            <span className="text-sm text-[var(--text-secondary-dark)]">System Status: <span className="text-green-400 font-semibold">Active</span></span>
-          </div>
-          <div className="hidden sm:flex items-center space-x-2">
-            <ICONS.clock className="h-4 w-4 text-[var(--text-secondary-dark)]"/>
-            <span className="text-sm text-[var(--text-secondary-dark)]">Last Updated: {lastUpdated.toLocaleTimeString()}</span>
-          </div>
+        <div
+          style={{
+            width: '1px',
+            height: '20px',
+            background: 'var(--border)',
+          }}
+        />
+        <div
+          style={{
+            fontFamily: 'var(--font-label)',
+            fontSize: '13px',
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          Live Fraud Detection Dashboard
         </div>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span
+            className="pulse-red"
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: 'var(--safe)',
+              display: 'inline-block',
+              animation: 'healthPulse 2s ease-in-out infinite',
+            }}
+          />
+          <span
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: '11px',
+              color: 'var(--safe)',
+              letterSpacing: '0.12em',
+            }}
+          >
+            LIVE
+          </span>
+        </div>
+
+        <button
+          onClick={toggleTheme}
+          style={{
+            width: '32px',
+            height: '32px',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--r-md)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: 'var(--text-secondary)',
+            transition: 'border-color 0.2s, color 0.2s',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--cyan)';
+            (e.currentTarget as HTMLButtonElement).style.color = 'var(--cyan)';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border)';
+            (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
+          }}
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark'
+            ? <ICONS.sun className="w-4 h-4" />
+            : <ICONS.moon className="w-4 h-4" />
+          }
+        </button>
       </div>
     </div>
   );
